@@ -139,5 +139,5 @@ int RSA_ZKPoS::keyGen(int k)
 
 int RSA_ZKPoS::tagGen(std::vector<mpz_t> &file, std::vector<mpz_t>& tags)
 {
-    
+
 }

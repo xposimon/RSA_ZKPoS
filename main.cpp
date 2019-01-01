@@ -31,7 +31,7 @@ int main()
         {
             readSize = max(length, BLOCKSIZE);
             length -= BLOCKSIZE;
-            fout.open("blockData.tmp", ios::binary|ios::out, 0);
+            fout.open("blockData.tmp", std::ios::binary|std::ios::out, 0);
             fout.write(&buffer[0], readSize);
             fout.close();
             pFile = fopen("blockData.tmp", "r");
