@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/rsa_test.dir/main.cpp.o CMakeFiles/rsa_test.dir/RSA_ZKPoS.cpp.o  -o rsa_test -lgmp 
