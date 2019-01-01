@@ -1,5 +1,6 @@
 #ifndef RSA_ZKPOS_RSA_ZKPOS_H
 #define RSA_ZKPOS_RSA_ZKPOS_H
+#define BLOCKSIZE 128
 #include <gmp.h>
 #include <ctime>
 #include <cstdlib>
@@ -48,7 +49,7 @@ public:
         mpz_clear(this->g2);
     }
     int keyGen(int k);// security param 1^k
-    int tagGen(std::vector<unsigned char>& file_bytes);
+    int tagGen(std::vector<mpz_t>& file , std::vector<mpz_t>& tags); //128bytes
     int commit();
     int challenge();
     int exportPk(std::string pkFileName = std::string("rsa_test.pk"));

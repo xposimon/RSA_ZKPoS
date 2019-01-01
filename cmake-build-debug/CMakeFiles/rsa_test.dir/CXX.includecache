@@ -27,6 +27,8 @@ string
 -
 
 /home/nclab/Desktop/RSA_ZKPoS/main.cpp
+fstream
+-
 RSA_ZKPoS.h
 /home/nclab/Desktop/RSA_ZKPoS/RSA_ZKPoS.h
 

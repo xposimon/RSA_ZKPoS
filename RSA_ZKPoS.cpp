@@ -137,7 +137,7 @@ int RSA_ZKPoS::keyGen(int k)
     return 1; // finish tasks
 }
 
-int RSA_ZKPoS::tagGen(std::vector<unsigned char> &file_bytes)
+int RSA_ZKPoS::tagGen(std::vector<mpz_t> &file, std::vector<mpz_t>& tags)
 {
-
+    
 }
