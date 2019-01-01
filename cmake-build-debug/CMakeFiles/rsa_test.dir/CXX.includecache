@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/nclab/Desktop/RSA_ZKPoS/RSA_ZKPoS.cpp
+RSA_ZKPoS.h
+/home/nclab/Desktop/RSA_ZKPoS/RSA_ZKPoS.h
+
+/home/nclab/Desktop/RSA_ZKPoS/RSA_ZKPoS.h
+gmp.h
+-
+ctime
+-
+cstdlib
+-
+cstdio
+-
+iostream
+-
+vector
+-
+string
+-
+
+/home/nclab/Desktop/RSA_ZKPoS/main.cpp
+RSA_ZKPoS.h
+/home/nclab/Desktop/RSA_ZKPoS/RSA_ZKPoS.h
+

@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 2.6)
+project (RSA_ZKPoS)
+include_directories( ${CMAKE_CURRENT_BINARY_DIR})
+add_executable(rsa_test main.cpp RSA_ZKPoS.cpp RSA_ZKPoS.h)
+target_link_libraries(rsa_test gmp)
