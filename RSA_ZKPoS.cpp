@@ -190,6 +190,20 @@ int RSA_ZKPoS::commit(mpz_t& commitment)
     mpz_clear(tmp);
 }
 
+int RSA_ZKPoS::challenge(std::vector<mpz_t>& coeff, mpz_t& R)
+{
+    gmp_randseed_ui(this->grt, time(nullptr));
+    mpz_init(R);
+    // simulate challenge
+    for( int i = 0; i < filesBlocks.size(); i++)
+    {
+        mpz_init(coeff[i])
+        mpz_rrandomb(coeff[i], this->k);
+    }
+    mpz_rrandomb(R, this->k)
+    return 1;
+}
+
 int RSA_ZKPoS::prove(const std::vector<mpz_t> c, const std::vector<mpz_t> files, const mpz_t randomness, const std::vector<mpz_t> tags, Proof& pi)
 {
     mpz_t tmp, t2;
@@ -227,4 +241,43 @@ int RSA_ZKPoS::prove(const std::vector<mpz_t> c, const std::vector<mpz_t> files,
     mpz_clear(tmp);
     mpz_clear(t2);
     return 1;
+}
+
+int RSA_ZKPoS::verify(const std::vector<mpz_t> coeff, const mpz_t R, const Proof pi, const std::vector<mpz_t> names, const mpz_t commitment_a)
+{
+    mpz_t left, right, t1, t2;
+    mpz_init(left);
+    mpz_init(right);
+    mpz_init(t1);
+    mpz_init(t2);
+    mpz_mul(t1, this->e, R);
+    mpz_powm(left, pi.t, t1, this->N);
+    mpz_mul(left, left, commitment_a);
+    mpz_mod(left, left, this->N); // left = a* pi^(eR) mod N
+
+    mpz_mul(t1, this->e, pi.sigma);
+    mpz_powm(t1, this->g2, t1, this->N);
+    mpz_powm(right, this->g1, pi.u, this->N);
+    mpz_mul(right, right, t1);
+    int len = names.size();
+    std::string s1, s2
+    for (int i = 0; i < len; i++)
+    {
+        mpz_set(t2, i);
+        mp2bitString(name[i], s1);
+        mp2bitString(t2, s2);
+        s1 = s1+s2; // name||i bit concat
+        mpz_set_str(t1, s1, 2);
+        mpz_set(t1, this->H(t1)); //ri
+        mpz_powm(t1, t1, coeff[i], this->N);
+        mpz_mul(right, right, t1);
+        mpz_mod(right, right, this->N); // right = g1^u * g2^(e*sigma) * (mul_i(ri^ci)) mod N
+    }
+
+    bool res = (left == right);
+    mpz_clear(left);
+    mpz_clear(right);
+    mpz_clear(t1);
+    mpz_clear(t2);
+    return res;
 }

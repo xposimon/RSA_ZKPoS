@@ -64,7 +64,8 @@ public:
     int tagGen(std::vector<mpz_t>& file , std::vector<mpz_t>& tags, std::vector<mpz_t>& names); //128bytes
     int prove(const std::vector<mpz_t> coeff, const std::vector<mpz_t> file, const mpz_t randomness, const std::vector<mpz_t> tags, Proof& pi);
     int commit(mpz_t commitment);
-    int challenge();
+    int challenge(std::vector<mpz_t>& coeff, mpz_t& R);
+    int verify(const std::vector<mpz_t> coeff, const mpz_t R, const Proof pi, const std::vector<mpz_t> names, const mpz_t commitment_a);
 
     int exportPk(std::string pkFileName = std::string("rsa_test.pk"));
     int exportSk(std::string skFileName = std::string("rsa_test.sk"));

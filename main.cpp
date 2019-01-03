@@ -52,22 +52,21 @@ int main()
     mpz_init(commitment);
     rsa_test->commit();
 
-    // simulate challenge
+    //simulate challenge
     std::vector<mpz_t> coeff;
     mpz_t R;
-    for( int i = 0; i < filesBlocks.size(); i++)
-    {
-        mpz_set_ui(coeff, rand());
-    }
-    mpz_set_ui(R, rand());
+    rsa_test->challenge(coeff, R);
 
     // generate proof
     Proof pi;
     rsa_test->prove(coeff, fileBlocks, R, tags, pi);
 
     //simulate verify
+    printf("Verify result is %d", rsa_test->verify(coeff, R, pi, fileBlocks, names, commitment));
 
-
+    for(int i = 0; i < fileBlocks.size(); i++)
+        mpz_clear(fileBlocks[i]), mpz_clear(names[i]), mpz_clear(tags[i]), mpz_clear(coeff[i]);
+    mpz_clear(R);
     mpz_clear(commitment);
     delete rsa_test;
     return 0;
