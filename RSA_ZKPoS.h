@@ -60,7 +60,7 @@ public:
         mpz_clear(this->hash_value);
     }
     int keyGen(int k);// security param 1^k
-    int tagGen(std::vector<safe_mpz>& file , std::vector<safe_mpz>& tags, std::vector<safe_mpz>& names); //128bytes
+    int tagGen(std::vector<safe_mpz>& file , std::vector<safe_mpz>& tags, std::vector<safe_mpz>& names, std::vector<safe_mpz>& r); //128bytes
     int prove(const std::vector<safe_mpz> coeff, const std::vector<safe_mpz> file, const mpz_t randomness, const std::vector<safe_mpz> tags, Proof& pi);
     int commit(mpz_t& commitment);
     int challenge(std::vector<safe_mpz>& coeff, mpz_t& R, int len);

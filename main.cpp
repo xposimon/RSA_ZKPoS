@@ -1,6 +1,6 @@
 #include <fstream>
 #include "RSA_ZKPoS.h"
-#define SECURITY_BITS 6
+#define SECURITY_BITS 100
 
 int min(int a, int b)
 {
@@ -23,6 +23,7 @@ int main()
     std::vector<safe_mpz> tags;
     std::vector<safe_mpz> fileBlocks;
     std::vector<safe_mpz> names;
+    std::vector<safe_mpz> r;
 
     if (fin)
     {
@@ -56,9 +57,10 @@ int main()
 
         tags.resize(count);
         names.resize(count);
+        r.resize(count);
 
         // generate tags
-        rsa_test->tagGen(fileBlocks, tags, names);
+        rsa_test->tagGen(fileBlocks, tags, names, r);
         printf("Tag gen:\n");
         for (int i = 0; i < count; i++)
             gmp_printf("%Zd %Zd %Zd\n", fileBlocks[i].z, tags[i].z, names[i].z);
@@ -69,8 +71,10 @@ int main()
     mpz_init(commitment);
     rsa_test->commit(commitment);
 
-    gmp_printf("Commitment: %Zd\n", commitment);
-
+    FILE *pFile=fopen("randoma.in", "w");
+    fprintf(pFile, "a:");
+    mpz_out_str(pFile, 10, commitment);
+    fprintf(pFile, "\n");
 
     //simulate challenge
     std::vector<safe_mpz> coeff;
@@ -85,10 +89,41 @@ int main()
     rsa_test->prove(coeff, fileBlocks, R, tags, pi);
 
     gmp_printf("Proof: (t, u, sigma) = (%Zd, %Zd, %Zd)\n", pi.t, pi.u, pi.sigma);
+    fprintf(pFile, "t:");
+    mpz_out_str(pFile, 10, pi.t);
+    fprintf(pFile, "\n");
+    fprintf(pFile, "sigma:");
+    mpz_out_str(pFile, 10, pi.sigma);
+    fprintf(pFile, "\n");
+    fprintf(pFile, "u:");
+    mpz_out_str(pFile, 10, pi.u);
+    fprintf(pFile, "\n");
+
+
+    pFile=fopen("paraminfo.in", "w");
+    fprintf(pFile, "file:");
+    for (int i = 0; i < fileBlocks.size(); i++)
+        mpz_out_str(pFile, 10, fileBlocks[i].z), fprintf(pFile, " ");
+    fprintf(pFile,"\n");
+
+    fprintf(pFile, "tags:");
+    for (int i = 0; i < fileBlocks.size(); i++)
+        mpz_out_str(pFile, 10, tags[i].z), fprintf(pFile, " ");
+    fprintf(pFile,"\n");
+
+    fprintf(pFile, "names:");
+    for (int i = 0; i < fileBlocks.size(); i++)
+        mpz_out_str(pFile, 10, names[i].z), fprintf(pFile, " ");
+    fprintf(pFile,"\n");
+
+    fprintf(pFile, "r:");
+    for (int i = 0; i < fileBlocks.size(); i++)
+        mpz_out_str(pFile, 10, r[i].z), fprintf(pFile, " ");
+    fprintf(pFile,"\n");
 
     //simulate verify
     int res = rsa_test->verify(coeff, R, pi, fileBlocks, names, commitment);
-    printf("111111\n");
+
     printf("Verify result is %d", res);
 
 //    for(int i = 0; i < fileBlocks.size(); i++)

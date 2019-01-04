@@ -4,26 +4,36 @@ bool RSA_ZKPoS::isGoodNunber(mpz_t& a)
 {
     mpz_t tmp;
     mpz_init(tmp);
+    if (!mpz_cmp_ui(a, 0))
+        return false;
+    // gcd(a+1, N) = 1, gcd(a-1, N) = 1, gcd(a, N) = 1
+    mpz_set(tmp, a);
+    gmp_printf("%Zd ",tmp);
+    mpz_gcd(tmp, tmp, this->N);
+    gmp_printf("%Zd %Zd\n",tmp, this->N);
+    if(mpz_cmp_ui(tmp, 1))
+        return false;
 
-    // gcd(a+1, N) = 1, gcd(a-1, N) = 1
     mpz_add_ui(tmp, a, 1);
     gmp_printf("%Zd ",tmp);
     mpz_gcd(tmp, tmp, this->N);
     gmp_printf("%Zd %Zd\n",tmp, this->N);
     if(mpz_cmp_ui(tmp, 1))
         return false;
+
     mpz_sub_ui(tmp, a, 1);
     gmp_printf("%Zd ",tmp);
     mpz_gcd(tmp, tmp, this->N);
     gmp_printf("%Zd %Zd\n",tmp, this->N);
     if(mpz_cmp_ui(tmp, 1))
         return false;
-
+    gmp_printf("a is %Zd\n", a);
     return true;
 }
 
 int RSA_ZKPoS::H(mpz_t z)
 {
+    gmp_printf("H: %Zd\n", z);
     // TODO simple Hash, not secure, return g1^z mod N, which is QRn
     mpz_powm(this->hash_value, this->g1, z, this->N); // TODO not clear tmp, is there a destructor in mpz_t?
     return 1;
@@ -94,7 +104,7 @@ int RSA_ZKPoS::keyGen(int k)
         mpz_sub_ui(tmp, q, 1);
         mpz_divexact_ui(this->q_plus, tmp, 2);
 
-    }while(mpz_probab_prime_p(this->q_plus, 5)==0); // probability 4^(-5) not prime
+    }while(!mpz_cmp(p, q) || mpz_probab_prime_p(this->q_plus, 5)==0); // probability 4^(-5) not prime
 
     gmp_printf("p:%Zd \nq:%Zd\n", p, q);
     mpz_mul(this->N, p, q);
@@ -113,20 +123,49 @@ int RSA_ZKPoS::keyGen(int k)
     mpz_mul(tmp, this->p_plus, this->q_plus);
     mpz_invert(this->d, this->e, tmp);
 
-    mpz_t a;
+    mpz_t a, group_order;
     mpz_init(a);
+    mpz_init(group_order);
+    mpz_mul(group_order, this->q_plus, this->p_plus); // a in p'q', a^2 mod N should be in Zn*
 
     do
     {
         mpz_urandomm(a, this->grt, this->N);
+        mpz_mul(a, a, a);
+        mpz_mod(a, a, this->N); // a is in QRn
     }
     while(!isGoodNunber(a));
     mpz_mul(a, a, a); // g = a^2
     mpz_set(this->g1, a);
+    gmp_printf("Group order: %Zd\n", group_order);
+
+
+//    int count = 2;
+//    while (mpz_cmp_ui(tmp, 1))
+//    {
+//        mpz_set_ui(tmp, count);
+//        mpz_mul(tmp, tmp, tmp);
+//        mpz_mod(tmp, tmp, this->N);
+//        //gmp_printf("%Zd ", tmp);
+//        count++;
+//    }
+//    printf("count:%d\n",count);
+//
+//    mpz_mod(tmp, this->g1, this->N);
+//    count = 0;
+//    while (mpz_cmp_ui(tmp, 1))
+//    {
+//        mpz_mul(tmp, this->g1, tmp);
+//        mpz_mod(tmp, tmp, this->N);
+//        //gmp_printf("%Zd ", tmp);
+//        count++;
+//    }
+//    printf("count:%d\n",count);
 
     do
     {
         mpz_urandomm(a, this->grt, this->N);
+        mpz_powm_ui(a, a, 2, this->N);
     }
     while(!isGoodNunber(a) || !mpz_cmp(this->g1, a));
     mpz_mul(a, a, a);
@@ -138,7 +177,7 @@ int RSA_ZKPoS::keyGen(int k)
     return 1; // finish tasks
 }
 
-int RSA_ZKPoS::tagGen(std::vector<safe_mpz> &file, std::vector<safe_mpz>& tags, std::vector<safe_mpz>& names)
+int RSA_ZKPoS::tagGen(std::vector<safe_mpz> &file, std::vector<safe_mpz>& tags, std::vector<safe_mpz>& names, std::vector<safe_mpz>& r)
 {
     int len = file.size();
     tags.resize(len);
@@ -161,10 +200,11 @@ int RSA_ZKPoS::tagGen(std::vector<safe_mpz> &file, std::vector<safe_mpz>& tags, 
         t1 = t2+t1; // name||i bit concat
 
         std::reverse(t1.begin(), t1.end());
-        //std::cout<<"added"<<t1<<std::endl;
+        std::cout<<"added:"<<t1<<std::endl;
         mpz_set_str(mptmp, t1.c_str(), 2);
         mpz_powm(wasted_r, this->g1, file[i].z, this->N);
         this->H(mptmp);
+        mpz_set(r[i].z, this->hash_value);
         mpz_mul(wasted_r, wasted_r, this->hash_value);
         mpz_powm(tags[i].z, wasted_r, this->d, this->N);
         mpz_mod(tags[i].z, tags[i].z, this->N);
@@ -184,11 +224,22 @@ int RSA_ZKPoS::commit(mpz_t& commitment)
     gmp_randseed_ui(this->grt, time(nullptr));
     mpz_rrandomb(this->z1, this->grt, k);
     mpz_rrandomb(this->z2, this->grt, k);
+    gmp_printf("z1 z2 g1: %Zd\n", tmp);
     mpz_powm(commitment, this->g1, this->z1, this->N);
+    gmp_printf("after g1: %Zd\n", commitment);
     mpz_mul(tmp, this->e, this->z2);
     mpz_powm(tmp, this->g2, tmp, this->N);
+    gmp_printf("after g2: %Zd\n", tmp);
     mpz_mul(commitment, commitment, tmp);
     mpz_mod(commitment, commitment, this->N);
+
+    FILE *pFile=fopen("random.in", "w");
+    fprintf(pFile, "z1:");
+    mpz_out_str(pFile, 10, this->z1);
+    fprintf(pFile, "\n");
+    fprintf(pFile, "z2:");
+    mpz_out_str(pFile, 10, this->z2);
+    fprintf(pFile, "\n");
 
     mpz_clear(tmp);
 }
@@ -203,8 +254,10 @@ int RSA_ZKPoS::challenge(std::vector<safe_mpz>& coeff, mpz_t& R, int len)
     {
         mpz_init(coeff[i].z);
         mpz_rrandomb(coeff[i].z, this->grt, this->k);
+        mpz_set_ui(coeff[i].z, 1);
     }
     mpz_rrandomb(R, this->grt, this->k);
+    mpz_set_ui(R, 1);
     return 1;
 }
 
@@ -217,6 +270,10 @@ int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> 
     mpz_set(pi.sigma, this->z2);
     mpz_set(pi.u, this->z1);
     mpz_rrandomb(pi.t, this->grt, this->k); // random sample p
+    FILE *pFile=fopen("randomp.in", "w");
+    fprintf(pFile, "p:");
+    mpz_out_str(pFile, 10, this->z1);
+    fprintf(pFile, "\n");
 
     mpz_mul(tmp, randomness, pi.t);
     mpz_add(pi.sigma, pi.sigma, tmp); // sigma = z2+R*p
@@ -260,12 +317,12 @@ int RSA_ZKPoS::verify(const std::vector<safe_mpz> coeff, const mpz_t R, const Pr
     mpz_mul(left, left, commitment_a);
     mpz_mod(left, left, this->N); // left = a* pi^(eR) mod N
 
-    gmp_printf("dbg: %Zd\n", left);
-
     mpz_mul(t1, this->e, pi.sigma);
     mpz_powm(t1, this->g2, t1, this->N);
     mpz_powm(right, this->g1, pi.u, this->N);
     mpz_mul(right, right, t1);
+    mpz_mod(right, right, this->N);
+    gmp_printf("%Zd\n", right);
     int len = names.size();
     std::string s1, s2;
     for (int i = 0; i < len; i++)
@@ -273,14 +330,20 @@ int RSA_ZKPoS::verify(const std::vector<safe_mpz> coeff, const mpz_t R, const Pr
         mpz_set_ui(t2, i);
         mp2bitString(names[i].z, s1);
         mp2bitString(t2, s2);
-        s1 = s1+s2; // name||i bit concat
+        s1 = s2+s1; // name||i bit concat
+        std::cout<<s1<<std::endl;
+        std::reverse(s1.begin(), s1.end());
+        std::cout<<"added:"<<s1<<std::endl;
         mpz_set_str(t1, s1.c_str(), 2);
         this->H(t1);
+        gmp_printf("%Zd r:%Zd\n", right, this->hash_value);
         mpz_powm(t2, this->hash_value, coeff[i].z, this->N); // ri^ci
         mpz_mul(right, right, t2);
         mpz_mod(right, right, this->N); // right = g1^u * g2^(e*sigma) * (mul_i(ri^ci)) mod N
     }
 
+
+    gmp_printf("%Zd, %Zd\n", left, right);
 
     bool res = (mpz_cmp(left,right)==0);
     printf("%d\n", res);
