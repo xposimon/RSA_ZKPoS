@@ -16,7 +16,7 @@ class Proof
 public:
     mpz_t t, u, sigma;
     Proof() {mpz_init(t); mpz_init(u); mpz_init(sigma);}
-    ~Proof() {mpz_clear(t); mpz_clear(u); mpz_clear(sigma);}
+    ~Proof() {}
 };
 
 class safe_mpz

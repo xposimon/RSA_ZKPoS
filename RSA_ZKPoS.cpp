@@ -33,7 +33,6 @@ bool RSA_ZKPoS::isGoodNunber(mpz_t& a)
 
 int RSA_ZKPoS::H(mpz_t z)
 {
-    gmp_printf("H: %Zd\n", z);
     // TODO simple Hash, not secure, return g1^z mod N, which is QRn
     mpz_powm(this->hash_value, this->g1, z, this->N); // TODO not clear tmp, is there a destructor in mpz_t?
     return 1;
@@ -233,13 +232,13 @@ int RSA_ZKPoS::commit(mpz_t& commitment)
     mpz_mul(commitment, commitment, tmp);
     mpz_mod(commitment, commitment, this->N);
 
-    FILE *pFile=fopen("random.in", "w");
-    fprintf(pFile, "z1:");
-    mpz_out_str(pFile, 10, this->z1);
-    fprintf(pFile, "\n");
-    fprintf(pFile, "z2:");
-    mpz_out_str(pFile, 10, this->z2);
-    fprintf(pFile, "\n");
+//    FILE *pFile=fopen("random.in", "w");
+//    fprintf(pFile, "z1:");
+//    mpz_out_str(pFile, 10, this->z1);
+//    fprintf(pFile, "\n");
+//    fprintf(pFile, "z2:");
+//    mpz_out_str(pFile, 10, this->z2);
+//    fprintf(pFile, "\n");
 
     mpz_clear(tmp);
 }
@@ -269,11 +268,11 @@ int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> 
     gmp_randseed_ui(this->grt, time(nullptr));
     mpz_set(pi.sigma, this->z2);
     mpz_set(pi.u, this->z1);
-    mpz_rrandomb(pi.t, this->grt, this->k); // random sample p
-    FILE *pFile=fopen("randomp.in", "w");
-    fprintf(pFile, "p:");
-    mpz_out_str(pFile, 10, this->z1);
-    fprintf(pFile, "\n");
+//    mpz_rrandomb(pi.t, this->grt, this->k); // random sample p
+//    FILE *pFile=fopen("randomp.in", "w");
+//    fprintf(pFile, "p:");
+//    mpz_out_str(pFile, 10, this->z1);
+//    fprintf(pFile, "\n");
 
     mpz_mul(tmp, randomness, pi.t);
     mpz_add(pi.sigma, pi.sigma, tmp); // sigma = z2+R*p
