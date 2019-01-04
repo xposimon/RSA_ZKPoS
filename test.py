@@ -94,8 +94,11 @@ if __name__ == "__main__":
     r = checkList['r']
     tags = checkList['tags']
     names = checkList['names']
+    coeff = checkList['coeff']
     pp = checkList["p'"]
     qp = checkList["q'"]
+    R = checkList['R']
+
 
     print checkList
     tmp = 1
@@ -115,7 +118,7 @@ if __name__ == "__main__":
     assert tmpa == a
 
     # a correct, sigma correct,
-    assert z2+p == sigma
+    assert z2+R*p == sigma
 
     for i in range(len(file)):
         tmp = 1
@@ -139,25 +142,24 @@ if __name__ == "__main__":
 
     tmp = pow(g2, p, N)
     for i in range(len(tags)):
-        tmp = tmp*pow(tags[i], 1, N) % N# should be c[i], where is 1 now
+        tmp = tmp*pow(tags[i], coeff[i], N) % N# should be c[i], where is 1 now
     assert tmp == t
     # t correct
 
     tmp = 0
     for i in range(len(file)):
-        tmp = 1 * file[i]# 1 is c[i]
-    tmp = tmp * 1 # 1 is R
+        tmp = coeff[i] * file[i]# 1 is c[i]
+    tmp = tmp * R # 1 is R
     tmp = (tmp + z1)
     assert tmp == u
     # u correct
 
-    tmp = pow(t, e*1, N) # 1 is R
+    tmp = pow(t, e*R, N) # 1 is R
     tmp = a*tmp % N
     print (tmp)
 
     tmp = pow(g1, u, N)
     tmp = tmp * pow(g2, e*sigma, N) % N
-    print(tmp)
     for i in range(len(r)):
-        tmp = tmp*pow(r[i], 1, N) % N
+        tmp = tmp*pow(r[i], coeff[i]*R, N) % N
     print (tmp)
