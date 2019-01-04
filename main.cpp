@@ -81,7 +81,7 @@ int main()
     // generate proof
     Proof pi;
     rsa_test->prove(coeff, fileBlocks, R, tags, pi);
-    
+
     gmp_printf("Proof: (t, u, sigma) = (%Zd, %Zd, %Zd)\n", pi.t, pi.u, pi.sigma);
 #ifdef DEBUG
     fprintf(pFile, "t:");

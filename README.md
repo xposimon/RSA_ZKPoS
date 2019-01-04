@@ -1,5 +1,5 @@
 ## Introduction
-RSA based PoS pro
+It's a demo of RSA-HLA off-chain prototype. The codes will finish the tasks with keyGen, tagGen, commit, challenge, prove, and verify.
 
 ### Depends:
 gmp
@@ -24,4 +24,17 @@ $make check
 $sudo make install
 ```
 
-### Api
+### Usage
+```
+$git clone [URL]
+$cd RSA_ZKPoS
+$mkdir build
+$cmake ..
+$make
+./rsa_test
+```
+
+### Remaining tasks
+1. Random oracle H isn't implemented with the current implementation as H(z){ return g1^z mod N }
+2. If the size of a file isn't the multiple of BLOCKSIZE, there is a need of padding, which is not implemented.
+Therefore, the size of input files should be of multiple of BLOCKSIZE.
