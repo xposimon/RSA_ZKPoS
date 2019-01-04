@@ -1,7 +1,7 @@
 ## Introduction
 It's a demo of RSA-HLA off-chain prototype. The codes will finish the tasks with keyGen, tagGen, commit, challenge, prove, and verify.
 
-### Depends:
+### Required library
 gmp
 
 ### Ubuntu Install gmp
