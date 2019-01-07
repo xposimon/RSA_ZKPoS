@@ -2,6 +2,7 @@
 // Created by nclab on 1/3/19.
 //
 //#define DEBUG
+#define TEST
 
 #ifndef RSA_ZKPOS_COMMON_H
 #define RSA_ZKPOS_COMMON_H
