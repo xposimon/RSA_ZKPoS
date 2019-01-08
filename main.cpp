@@ -1,11 +1,6 @@
 #include <fstream>
 #include "RSA_ZKPoS.h"
-#define SECURITY_BITS 1024
-
-int min(int a, int b)
-{
-    return a<b?a:b;
-}
+#define SECURITY_BITS 2048
 
 int main()
 {
@@ -27,13 +22,14 @@ int main()
     // rsa_test->dbg_importPk(5, 5, 163, 2, 1024, 4761);
 
     std::cout<<"\nReading File: "<<std::endl;
-    std::string filepath = std::string("../inputdata/100MB.in");
+    std::string filepath = std::string("../inputdata/10MB.in");
     std::ifstream fin(filepath.c_str(), std::ios::binary);
 
     std::vector<safe_mpz> tags;
     std::vector<safe_mpz> fileBlocks;
     std::vector<safe_mpz> names;
     std::vector<safe_mpz> r;
+    std::vector<int> index;
 
     if (fin)
     {
@@ -95,15 +91,14 @@ int main()
     //simulate challenge
     std::vector<safe_mpz> coeff;
     mpz_t R;
-    rsa_test->challenge(coeff, R, fileBlocks.size());
+    rsa_test->challenge(index, coeff, R, fileBlocks.size());
     gmp_printf("\nChallenge with R=%Zd:\n", R);
-
 #ifdef TEST
     startTime = clock();
 #endif
     // generate proof
     Proof pi;
-    rsa_test->prove(coeff, fileBlocks, R, tags, pi);
+    rsa_test->prove(index, coeff, fileBlocks, R, tags, pi);
 #ifdef TEST
     endTime = clock();
     stepTime.push_back((double)(endTime-startTime)/CLOCKS_PER_SEC);
@@ -156,7 +151,7 @@ int main()
     startTime = clock();
 #endif
     //simulate verify
-    int res = rsa_test->verify(coeff, R, pi, fileBlocks, names, commitment);
+    int res = rsa_test->verify(index, coeff, R, pi, names, commitment);
 #ifdef TEST
     endTime = clock();
     stepTime.push_back((double)(endTime-startTime)/CLOCKS_PER_SEC);

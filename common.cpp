@@ -2,6 +2,11 @@
 // Created by nclab on 1/4/19.
 //
 #include "common.h"
+int min(int a, int b)
+{
+    return a<b?a:b;
+}
+
 void mp2bits(const mpz_t z, std::vector<bool>& bits)
 {
     if (!mpz_cmp_ui(z, 0))

@@ -89,7 +89,7 @@ int RSA_ZKPoS::keyGen(int k)
         mpz_sub_ui(tmp, p, 1);
         mpz_divexact_ui(this->p_plus, tmp, 2);
     }while(mpz_probab_prime_p(this->p_plus, 5)==0);
-
+    gmp_printf("p:%Zd \n", p);
     do
     {
         mpz_rrandomb(q, this->grt, k+1);
@@ -99,12 +99,14 @@ int RSA_ZKPoS::keyGen(int k)
 
     }while(!mpz_cmp(p, q) || mpz_probab_prime_p(this->q_plus, 5)==0); // probability 4^(-5) not prime
 
-    gmp_printf("p:%Zd \nq:%Zd\n", p, q);
+    gmp_printf("q:%Zd\n", q);
     mpz_mul(this->N, p, q);
 
 
     // the e is between [2^(k+1), 2^(2k)+2^(k+1)]
-    int e_bit = rand()%(4*k);
+    std::default_random_engine e(time(nullptr));
+    std::uniform_int_distribution<unsigned> u(0, 4*k);
+    int e_bit = u(e);
 
     mpz_set_ui(this->e, 1);
     mpz_mul_2exp(this->e, this->e, 2*k+1);
@@ -211,24 +213,48 @@ int RSA_ZKPoS::commit(mpz_t& commitment)
     mpz_clear(tmp);
 }
 
-int RSA_ZKPoS::challenge(std::vector<safe_mpz>& coeff, mpz_t& R, int len)
+int RSA_ZKPoS::challenge(std::vector<int>& index, std::vector<safe_mpz>& coeff, mpz_t& R, int len)
 {
     gmp_randseed_ui(this->grt, time(nullptr));
     mpz_init(R);
     // simulate challenge
-    coeff.resize(len);
-    for( int i = 0; i < len; i++)
+    int samplesize = min(SAMPLESIZE, len);
+    coeff.resize(samplesize);
+    index.resize(samplesize);
+    std::default_random_engine random;
+    std::uniform_int_distribution<int> u(0, len-1);
+    std::set<int> chosen;
+    int tmpc;
+    for( int i = 0; i < samplesize; i++)
     {
         mpz_init(coeff[i].z);
         mpz_rrandomb(coeff[i].z, this->grt, this->k);
+        if (samplesize < SAMPLESIZE)
+            index[i] = i;
+
         //mpz_set_ui(coeff[i].z, 1);
+    }
+    if (samplesize < SAMPLESIZE)
+    {
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        shuffle (index.begin(), index.end(), std::default_random_engine(seed));
+    }
+    else {
+        for (int i = 0; i < samplesize; i++) {
+            tmpc = u(random);
+            while (chosen.find(tmpc) != chosen.end())
+                tmpc = u(random);
+            index[i] = tmpc;
+            chosen.insert(tmpc);
+        }
     }
     mpz_rrandomb(R, this->grt, this->k);
     //mpz_set_ui(R, 1);
+
     return 1;
 }
 
-int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> files, const mpz_t randomness, const std::vector<safe_mpz> tags, Proof& pi)
+int RSA_ZKPoS::prove(const std::vector<int> index, const std::vector<safe_mpz> c, const std::vector<safe_mpz> files, const mpz_t randomness, const std::vector<safe_mpz> tags, Proof& pi)
 {
     mpz_t tmp, t2;
     mpz_init(tmp);
@@ -249,11 +275,11 @@ int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> 
     mpz_powm(pi.t, this->g2, pi.t, this->N); // g2^p
 
 
-    int len = files.size();
+    int len = index.size();
 
     for (int i = 0 ; i < len; i++)
     {
-        mpz_powm(tmp, tags[i].z, c[i].z, this->N);
+        mpz_powm(tmp, tags[index[i]].z, c[i].z, this->N);
         mpz_mul(pi.t, pi.t, tmp);
         mpz_mod(pi.t, pi.t, this->N); // t = t* mul_i(ti^ci) mod N
     }
@@ -261,7 +287,7 @@ int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> 
     mpz_set_ui(tmp, 0);
     for (int i = 0; i < len; i++)
     {
-        mpz_mul(t2, c[i].z, files[i].z);
+        mpz_mul(t2, c[i].z, files[index[i]].z);
         mpz_add(tmp, tmp, t2);
     }
     mpz_mul(tmp, tmp, randomness);
@@ -272,7 +298,7 @@ int RSA_ZKPoS::prove(const std::vector<safe_mpz> c, const std::vector<safe_mpz> 
     return 1;
 }
 
-int RSA_ZKPoS::verify(const std::vector<safe_mpz> coeff, const mpz_t R, const Proof pi, const std::vector<safe_mpz> files, const std::vector<safe_mpz> names, const mpz_t commitment_a)
+int RSA_ZKPoS::verify(const std::vector<int> index, const std::vector<safe_mpz> coeff, const mpz_t R, const Proof pi, const std::vector<safe_mpz> names, const mpz_t commitment_a)
 {
 
     mpz_t left, right, t1, t2;
@@ -291,12 +317,12 @@ int RSA_ZKPoS::verify(const std::vector<safe_mpz> coeff, const mpz_t R, const Pr
     mpz_mul(right, right, t1);
     mpz_mod(right, right, this->N);
 
-    int len = names.size();
+    int len = index.size();
     std::string s1, s2;
     for (int i = 0; i < len; i++)
     {
-        mpz_set_ui(t2, i);
-        mp2bitString(names[i].z, s1);
+        mpz_set_ui(t2, index[i]);
+        mp2bitString(names[index[i]].z, s1);
         mp2bitString(t2, s2);
         s1 = s2+s1; // name||i bit concat
         std::reverse(s1.begin(), s1.end());

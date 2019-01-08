@@ -1,8 +1,12 @@
 ## Introduction
 It's a demo of RSA-HLA off-chain prototype. The codes will finish the tasks with keyGen, tagGen, commit, challenge, prove, and verify.
 
+### Environment
+Ubuntu 18.04
+g++ 7.3.0
+
 ### Required library
-gmp
+gmp 6.1.2
 
 ### Ubuntu Install gmp
 ##### 1. Install depend: m4

@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
+int min(int a, int b);
 
 void mp2bits(const mpz_t z, std::vector<bool>& bits);
 
